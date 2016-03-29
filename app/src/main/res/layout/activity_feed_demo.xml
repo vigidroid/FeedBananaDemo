@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.example.vigi.feedbananademo.FeedBananaLayout
+    android:id="@+id/feed_banana_layout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp"
+            android:text="拖动到up主头像上投喂香蕉"
+            android:textSize="18sp"/>
+
+        <Space
+            android:id="@+id/uploader_place_holder"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="80dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Vigi"
+            android:textSize="18sp"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="100dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/banana_decrease_bt"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="#888888"
+                android:gravity="center"
+                android:text=">>"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"/>
+
+            <Space
+                android:id="@+id/banana_place_holder"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_marginLeft="70dp"
+                android:layout_marginRight="70dp"/>
+
+            <TextView
+                android:id="@+id/banana_increase_bt"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="#888888"
+                android:gravity="center"
+                android:text=">>"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/reset_bt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"/>
+    </LinearLayout>
+
+    <com.makeramen.roundedimageview.RoundedImageView
+        android:id="@+id/uploader_view"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/uploader_doge"
+        app:layout_banana_anchor="@id/uploader_place_holder"
+        app:riv_border_color="#993333"
+        app:riv_border_width="2dp"
+        app:riv_oval="true"/>
+
+    <View
+        android:id="@+id/banana_view"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@drawable/shape_round"
+        app:layout_banana_anchor="@id/banana_place_holder"/>
+</com.example.vigi.feedbananademo.FeedBananaLayout>
