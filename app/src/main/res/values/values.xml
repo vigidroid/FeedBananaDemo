@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="FeedBananaLayout_LayoutParams">
-        <attr name="layout_banana_anchor" format="reference"/>
+        <attr name="layout_view_ref" format="reference"/>
+        <attr name="banana_threshold_radius" format="dimension"/>
+        <attr name="banana_draggable" format="boolean"/>
     </declare-styleable>
 </resources>

@@ -59,16 +59,6 @@ public class FeedBananaLayout extends FrameLayout {
         mViewDragHelper = ViewDragHelper.create(this, new ViewDragCallBack());
     }
 
-    public void feedWhom(View eater, View eaterContainer) {
-    }
-
-    public void setFeedActionListener(FeedActionListener feedActionListener) {
-        mFeedActionListener = feedActionListener;
-    }
-
-    public void eatUp(boolean success, View successAlert) {
-    }
-
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         return mViewDragHelper.shouldInterceptTouchEvent(ev);
@@ -93,19 +83,26 @@ public class FeedBananaLayout extends FrameLayout {
         public boolean tryCaptureView(View child, int pointerId) {
             return false;
         }
-    }
 
-    public boolean isViewsContainRel(View small, View big) {
-        if (small == null || big == null) {
-            return false;
+        @Override
+        public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
+
         }
-        if (small.getVisibility() == VISIBLE && big.getVisibility() == VISIBLE) {
-            int centerLeft = small.getLeft() + small.getWidth() / 2;
-            int centerTop = small.getTop() + small.getHeight() / 2;
-            return centerLeft > big.getLeft() && centerLeft < big.getRight()
-                    && centerTop > big.getTop() && centerTop < big.getBottom();
+
+        @Override
+        public void onViewReleased(View releasedChild, float xvel, float yvel) {
+
         }
-        return false;
+
+        @Override
+        public int clampViewPositionHorizontal(View child, int left, int dx) {
+            return left;
+        }
+
+        @Override
+        public int clampViewPositionVertical(View child, int top, int dy) {
+            return top;
+        }
     }
 
     @Override
@@ -165,6 +162,8 @@ public class FeedBananaLayout extends FrameLayout {
     public static class LayoutParams extends FrameLayout.LayoutParams {
 
         int mAnchorId = View.NO_ID;
+        boolean mDraggable = false;
+        int mThresholdRadius = 0;
 
         View mAnchorView;
 
@@ -172,7 +171,9 @@ public class FeedBananaLayout extends FrameLayout {
             super(c, attrs);
 
             TypedArray a = c.obtainStyledAttributes(attrs, R.styleable.FeedBananaLayout_LayoutParams);
-            mAnchorId = a.getResourceId(R.styleable.FeedBananaLayout_LayoutParams_layout_banana_anchor, View.NO_ID);
+            mAnchorId = a.getResourceId(R.styleable.FeedBananaLayout_LayoutParams_layout_view_ref, View.NO_ID);
+            mDraggable = a.getBoolean(R.styleable.FeedBananaLayout_LayoutParams_banana_draggable, false);
+            mThresholdRadius = a.getDimensionPixelSize(R.styleable.FeedBananaLayout_LayoutParams_banana_threshold_radius, 0);
             a.recycle();
         }
 
@@ -202,6 +203,12 @@ public class FeedBananaLayout extends FrameLayout {
                 return;
             }
             mAnchorView = parent.findViewById(mAnchorId);
+            if (mAnchorView != null) {
+                // make mAnchorView's layout_width and layout_height wrote in xml invalid
+                ViewGroup.LayoutParams lp = mAnchorView.getLayoutParams();
+                lp.width = this.width;
+                lp.height = this.height;
+            }
         }
 
         void updateOffsetToAnchor(FeedBananaLayout parent, View child, Rect tempRect) {

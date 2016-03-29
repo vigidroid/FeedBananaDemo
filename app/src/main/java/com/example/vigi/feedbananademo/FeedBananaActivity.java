@@ -48,75 +48,18 @@ public class FeedBananaActivity extends AppCompatActivity implements View.OnClic
 
         mDecreaseBt.setOnClickListener(this);
         mIncreaseBt.setOnClickListener(this);
-
-//        mFeedBananaLayout.feedWhom(mUpLoaderView, mUpLoaderView);
-//        mFeedBananaLayout.setFeedActionListener(new FeedBananaLayout.FeedActionListener() {
-//
-//            @Override
-//            public void bananaCaught(Banana banana) {
-//                mBananaView.setTextColor(Color.GREEN);
-//            }
-//
-//            @Override
-//            public void bananaPutBack() {
-//                mBananaView.setTextColor(Color.WHITE);
-//            }
-//
-//            @Override
-//            public void eaterSeeIt() {
-//                mBananaView.setTextColor(Color.RED);
-//                mUpLoaderView.setBackgroundColor(Color.LTGRAY);
-//            }
-//
-//            @Override
-//            public void eaterNotSeeIt() {
-//                mBananaView.setTextColor(Color.GREEN);
-//                mUpLoaderView.setBackgroundColor(Color.TRANSPARENT);
-//            }
-//
-//            @Override
-//            public void beEatOff(int count) {
-//                Toast.makeText(FeedBDemoActivity.this, "吃了" + count + "个香蕉", Toast.LENGTH_LONG).show();
-//                mFeedBananaLayout.eatUp(false, mSuccessAlert);
-//            }
-//
-//        });
+        mResetBt.setOnClickListener(this);
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-//            case R.id.icon_close:
-//                finish();
-//                break;
-//            case R.id.decrease_banana: {
-//                final int oldCount = mBananaView.getCount();
-//                if (oldCount > 1) {
-//                    final int newCount = oldCount - 1;
-//                    mBananaView.setCount(newCount);
-//                    if (newCount <= 1) {
-//                        mDeCreaseView.setClickable(false);
-//                    }
-//                    if (!mInCreaseView.isClickable()) {
-//                        mInCreaseView.setClickable(true);
-//                    }
-//                }
-//                break;
-//            }
-//            case R.id.increase_banana: {
-//                final int oldCount = mBananaView.getCount();
-//                if (oldCount < 5) {
-//                    final int newCount = oldCount + 1;
-//                    mBananaView.setCount(newCount);
-//                    if (newCount >= 5) {
-//                        mInCreaseView.setClickable(false);
-//                    }
-//                    if (!mDeCreaseView.isClickable()) {
-//                        mDeCreaseView.setClickable(true);
-//                    }
-//                }
-//                break;
-//            }
+            case R.id.banana_decrease_bt:
+                break;
+            case R.id.banana_increase_bt:
+                break;
+            case R.id.reset_bt:
+                break;
         }
     }
 }
