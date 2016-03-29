@@ -81,7 +81,8 @@ public class FeedBananaLayout extends FrameLayout {
 
         @Override
         public boolean tryCaptureView(View child, int pointerId) {
-            return false;
+            LayoutParams lp = (LayoutParams) child.getLayoutParams();
+            return lp.mDraggable;
         }
 
         @Override
@@ -91,7 +92,9 @@ public class FeedBananaLayout extends FrameLayout {
 
         @Override
         public void onViewReleased(View releasedChild, float xvel, float yvel) {
-
+            LayoutParams lp = (LayoutParams) releasedChild.getLayoutParams();
+            mViewDragHelper.settleCapturedViewAt(lp.mResetPosX, lp.mResetPosY);
+            invalidate();
         }
 
         @Override
@@ -166,6 +169,8 @@ public class FeedBananaLayout extends FrameLayout {
         int mThresholdRadius = 0;
 
         View mAnchorView;
+        int mResetPosX;
+        int mResetPosY;
 
         public LayoutParams(Context c, AttributeSet attrs) {
             super(c, attrs);
@@ -224,6 +229,8 @@ public class FeedBananaLayout extends FrameLayout {
             final int childPivotY = (child.getTop() + child.getBottom()) / 2;
             child.offsetLeftAndRight(anchorPivotX - childPivotX);
             child.offsetTopAndBottom(anchorPivotY - childPivotY);
+            mResetPosX = child.getLeft();
+            mResetPosY = child.getTop();
         }
     }
 
