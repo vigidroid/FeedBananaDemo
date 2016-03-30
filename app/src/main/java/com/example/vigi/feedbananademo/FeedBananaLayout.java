@@ -14,6 +14,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import com.facebook.rebound.SimpleSpringListener;
+import com.facebook.rebound.Spring;
+import com.facebook.rebound.SpringSystem;
+
 /**
  * Created by Vigi on 2015/10/29.
  */
@@ -26,6 +30,7 @@ public class FeedBananaLayout extends FrameLayout {
     public static final int STATE_FINISHED = 3;
 
     private ViewDragHelper mViewDragHelper;
+    private SpringSystem mSpringSystem;
 
     private FeedActionListener mFeedActionListener;
     private int mState = STATE_INIT;
@@ -57,6 +62,7 @@ public class FeedBananaLayout extends FrameLayout {
 
     private void init() {
         mViewDragHelper = ViewDragHelper.create(this, new ViewDragCallBack());
+        mSpringSystem = SpringSystem.create();
     }
 
     @Override
@@ -86,6 +92,12 @@ public class FeedBananaLayout extends FrameLayout {
         }
 
         @Override
+        public void onViewCaptured(View capturedChild, int activePointerId) {
+            LayoutParams lp = (LayoutParams) capturedChild.getLayoutParams();
+            lp.abortAnimation();
+        }
+
+        @Override
         public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
 
         }
@@ -93,8 +105,9 @@ public class FeedBananaLayout extends FrameLayout {
         @Override
         public void onViewReleased(View releasedChild, float xvel, float yvel) {
             LayoutParams lp = (LayoutParams) releasedChild.getLayoutParams();
-            mViewDragHelper.settleCapturedViewAt(lp.mResetPosX, lp.mResetPosY);
-            invalidate();
+            lp.resetPos();
+//            mViewDragHelper.settleCapturedViewAt(lp.mResetPosX, lp.mResetPosY);
+//            invalidate();
         }
 
         @Override
@@ -120,7 +133,7 @@ public class FeedBananaLayout extends FrameLayout {
             ViewGroup.LayoutParams vglp = child.getLayoutParams();
             if (vglp instanceof LayoutParams) {
                 LayoutParams lp = (LayoutParams) vglp;
-                lp.resolveAnchorView(this);
+                lp.resolveAnchorView(this, child);
             }
         }
     }
@@ -163,7 +176,6 @@ public class FeedBananaLayout extends FrameLayout {
     }
 
     public static class LayoutParams extends FrameLayout.LayoutParams {
-
         int mAnchorId = View.NO_ID;
         boolean mDraggable = false;
         int mThresholdRadius = 0;
@@ -171,6 +183,7 @@ public class FeedBananaLayout extends FrameLayout {
         View mAnchorView;
         int mResetPosX;
         int mResetPosY;
+        ViewAnimator mViewAnimator;
 
         public LayoutParams(Context c, AttributeSet attrs) {
             super(c, attrs);
@@ -203,7 +216,14 @@ public class FeedBananaLayout extends FrameLayout {
             super(source);
         }
 
-        void resolveAnchorView(FeedBananaLayout parent) {
+        private void initViewAnimator(SpringSystem springSystem, View child) {
+            if (mDraggable) {
+                mViewAnimator = new ViewAnimator(springSystem, child);
+            }
+        }
+
+        void resolveAnchorView(FeedBananaLayout parent, View child) {
+            initViewAnimator(parent.mSpringSystem, child);
             if (mAnchorId == View.NO_ID) {
                 return;
             }
@@ -229,8 +249,60 @@ public class FeedBananaLayout extends FrameLayout {
             final int childPivotY = (child.getTop() + child.getBottom()) / 2;
             child.offsetLeftAndRight(anchorPivotX - childPivotX);
             child.offsetTopAndBottom(anchorPivotY - childPivotY);
+            // save position
             mResetPosX = child.getLeft();
             mResetPosY = child.getTop();
+        }
+
+        void resetPos() {
+            if (mViewAnimator == null) {
+                return;
+            }
+            mViewAnimator.animView(mResetPosX, mResetPosY);
+        }
+
+        void abortAnimation() {
+            if (mViewAnimator == null) {
+                return;
+            }
+            mViewAnimator.abort();
+        }
+    }
+
+    static class ViewAnimator {
+        private Spring mSpringX;
+        private Spring mSpringY;
+        private View mView;
+
+        public ViewAnimator(SpringSystem springSystem, View view) {
+            mSpringX = springSystem.createSpring();
+            mSpringY = springSystem.createSpring();
+            mView = view;
+
+            mSpringX.addListener(new SimpleSpringListener() {
+                @Override
+                public void onSpringUpdate(Spring spring) {
+                    mView.offsetLeftAndRight((int) (spring.getCurrentValue() - mView.getLeft()));
+                }
+            });
+            mSpringY.addListener(new SimpleSpringListener() {
+                @Override
+                public void onSpringUpdate(Spring spring) {
+                    mView.offsetTopAndBottom((int) (spring.getCurrentValue() - mView.getTop()));
+                }
+            });
+        }
+
+        void animView(int endX, int endY) {
+            mSpringX.setCurrentValue(mView.getLeft());
+            mSpringY.setCurrentValue(mView.getTop());
+            mSpringX.setEndValue(endX);
+            mSpringY.setEndValue(endY);
+        }
+
+        void abort() {
+            mSpringX.setAtRest();
+            mSpringY.setAtRest();
         }
     }
 
