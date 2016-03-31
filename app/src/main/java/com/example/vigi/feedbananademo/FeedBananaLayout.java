@@ -16,6 +16,7 @@ import android.widget.FrameLayout;
 
 import com.facebook.rebound.SimpleSpringListener;
 import com.facebook.rebound.Spring;
+import com.facebook.rebound.SpringConfig;
 import com.facebook.rebound.SpringSystem;
 
 /**
@@ -84,6 +85,10 @@ public class FeedBananaLayout extends FrameLayout {
         blp.mFollowerLP = ulp;
     }
 
+    public void setFeedActionListener(FeedActionListener feedActionListener) {
+        mFeedActionListener = feedActionListener;
+    }
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         return mViewDragHelper.shouldInterceptTouchEvent(ev);
@@ -112,15 +117,23 @@ public class FeedBananaLayout extends FrameLayout {
 
         @Override
         public void onViewCaptured(View capturedChild, int activePointerId) {
+            if (mFeedActionListener != null) {
+                mFeedActionListener.bananaCaught(capturedChild);
+            }
             LayoutParams lp = (LayoutParams) capturedChild.getLayoutParams();
             lp.abortAnimation();
+            notifyFollow(capturedChild);
         }
 
         @Override
         public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
-            LayoutParams lp = (LayoutParams) changedView.getLayoutParams();
-            final int targetPivotX = left + changedView.getWidth() / 2;
-            final int targetPivotY = top + changedView.getHeight() / 2;
+            notifyFollow(changedView);
+        }
+
+        private void notifyFollow(View capturedChild) {
+            LayoutParams lp = (LayoutParams) capturedChild.getLayoutParams();
+            final int targetPivotX = capturedChild.getLeft() + capturedChild.getWidth() / 2;
+            final int targetPivotY = capturedChild.getTop() + capturedChild.getHeight() / 2;
             lp.notifyFollower(targetPivotX, targetPivotY);
         }
 
@@ -305,8 +318,8 @@ public class FeedBananaLayout extends FrameLayout {
         private int mResetPosY;
 
         public ViewAnimator(SpringSystem springSystem, View view) {
-            mSpringX = springSystem.createSpring();
-            mSpringY = springSystem.createSpring();
+            mSpringX = springSystem.createSpring().setSpringConfig(SpringConfig.fromOrigamiTensionAndFriction(15, 7));
+            mSpringY = springSystem.createSpring().setSpringConfig(SpringConfig.fromOrigamiTensionAndFriction(15, 7));
             mView = view;
 
             mSpringX.addListener(new SimpleSpringListener() {
@@ -376,12 +389,12 @@ public class FeedBananaLayout extends FrameLayout {
     public interface FeedActionListener {
         void bananaCaught(View banana);
 
-        void bananaPutBack();
+        void bananaPutBack(View banana);
 
-        void eaterSeeIt();
+        void uploaderSeen(View banana, View uploader);
 
-        void eaterNotSeeIt();
+        void uploaderMissed(View banana, View uploader);
 
-        void beEatOff(int count);
+        void beEatOff(View banana, View uploader);
     }
 }

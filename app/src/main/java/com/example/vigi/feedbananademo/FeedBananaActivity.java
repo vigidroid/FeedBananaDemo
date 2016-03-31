@@ -23,13 +23,13 @@ public class FeedBananaActivity extends AppCompatActivity implements View.OnClic
     Space mUploaderPlaceHolder;
 
     @Bind(R.id.banana_decrease_bt)
-    TextView mDecreaseBt;
+    View mDecreaseBt;
 
     @Bind(R.id.banana_place_holder)
     Space mBananaPlaceHolder;
 
     @Bind(R.id.banana_increase_bt)
-    TextView mIncreaseBt;
+    View mIncreaseBt;
 
     @Bind(R.id.reset_bt)
     ImageView mResetBt;
@@ -38,7 +38,9 @@ public class FeedBananaActivity extends AppCompatActivity implements View.OnClic
     RoundedImageView mUploaderView;
 
     @Bind(R.id.banana_view)
-    View mBananaView;
+    TextView mBananaView;
+
+    private int mSelectBananaCount = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,15 +52,44 @@ public class FeedBananaActivity extends AppCompatActivity implements View.OnClic
         mIncreaseBt.setOnClickListener(this);
         mResetBt.setOnClickListener(this);
 
+        mBananaView.setText(String.valueOf(mSelectBananaCount));
         mFeedBananaLayout.makeFollow(mUploaderView, mBananaView);
+        mFeedBananaLayout.setFeedActionListener(new FeedBananaLayout.FeedActionListener() {
+            @Override
+            public void bananaCaught(View banana) {
+//                banana.animate().scaleX(1.3f).scaleY(1.3f).start();
+            }
+
+            @Override
+            public void bananaPutBack(View banana) {
+
+            }
+
+            @Override
+            public void uploaderSeen(View banana, View uploader) {
+
+            }
+
+            @Override
+            public void uploaderMissed(View banana, View uploader) {
+
+            }
+
+            @Override
+            public void beEatOff(View banana, View uploader) {
+
+            }
+        });
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.banana_decrease_bt:
+                mBananaView.setText(String.valueOf(--mSelectBananaCount));
                 break;
             case R.id.banana_increase_bt:
+                mBananaView.setText(String.valueOf(++mSelectBananaCount));
                 break;
             case R.id.reset_bt:
                 break;

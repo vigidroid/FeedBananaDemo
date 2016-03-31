@@ -40,15 +40,13 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <TextView
+            <ImageView
                 android:id="@+id/banana_decrease_bt"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="#888888"
-                android:gravity="center"
-                android:text=">>"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"/>
+                android:padding="5dp"
+                android:src="@drawable/arrow_white"/>
 
             <Space
                 android:id="@+id/banana_place_holder"
@@ -57,15 +55,14 @@
                 android:layout_marginLeft="70dp"
                 android:layout_marginRight="70dp"/>
 
-            <TextView
+            <ImageView
                 android:id="@+id/banana_increase_bt"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="#888888"
-                android:gravity="center"
-                android:text=">>"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"/>
+                android:padding="5dp"
+                android:rotation="180"
+                android:src="@drawable/arrow_white"/>
         </LinearLayout>
 
         <ImageView
@@ -82,7 +79,7 @@
         android:layout_height="100dp"
         android:scaleType="centerCrop"
         android:src="@drawable/uploader_doge"
-        app:banana_threshold_radius="50dp"
+        app:banana_threshold_radius="60dp"
         app:layout_view_ref="@id/uploader_place_holder"
         app:riv_border_color="#993333"
         app:riv_border_width="2dp"
