@@ -49,6 +49,8 @@ public class FeedBananaActivity extends AppCompatActivity implements View.OnClic
         mDecreaseBt.setOnClickListener(this);
         mIncreaseBt.setOnClickListener(this);
         mResetBt.setOnClickListener(this);
+
+        mFeedBananaLayout.makeFollow(mUploaderView, mBananaView);
     }
 
     @Override
