@@ -14,10 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import com.facebook.rebound.SimpleSpringListener;
-import com.facebook.rebound.Spring;
 import com.facebook.rebound.SpringConfig;
-import com.facebook.rebound.SpringSystem;
 
 /**
  * Created by Vigi on 2015/10/29.
@@ -31,7 +28,6 @@ public class FeedBananaLayout extends FrameLayout {
     public static final int STATE_FINISHED = 3;
 
     private ViewDragHelper mViewDragHelper;
-    private SpringSystem mSpringSystem;
 
     private FeedActionListener mFeedActionListener;
     private int mState = STATE_INIT;
@@ -63,7 +59,6 @@ public class FeedBananaLayout extends FrameLayout {
 
     private void init() {
         mViewDragHelper = ViewDragHelper.create(this, new ViewDragCallBack());
-        mSpringSystem = SpringSystem.create();
     }
 
     public void makeFollow(View uploader, View banana) {
@@ -82,7 +77,6 @@ public class FeedBananaLayout extends FrameLayout {
             // banana cannot be dragged thus we ignore
             return;
         }
-        blp.mFollowerLP = ulp;
     }
 
     public void setFeedActionListener(FeedActionListener feedActionListener) {
@@ -121,7 +115,7 @@ public class FeedBananaLayout extends FrameLayout {
                 mFeedActionListener.bananaCaught(capturedChild);
             }
             LayoutParams lp = (LayoutParams) capturedChild.getLayoutParams();
-            lp.abortAnimation();
+            lp.mViewAnimator.abort();
             notifyFollow(capturedChild);
         }
 
@@ -134,13 +128,15 @@ public class FeedBananaLayout extends FrameLayout {
             LayoutParams lp = (LayoutParams) capturedChild.getLayoutParams();
             final int targetPivotX = capturedChild.getLeft() + capturedChild.getWidth() / 2;
             final int targetPivotY = capturedChild.getTop() + capturedChild.getHeight() / 2;
-            lp.notifyFollower(targetPivotX, targetPivotY);
+            if (lp.mViewAnimator != null && lp.mViewAnimator instanceof DraggableViewAnimator) {
+                ((DraggableViewAnimator) lp.mViewAnimator).notifyFollower(targetPivotX, targetPivotY);
+            }
         }
 
         @Override
         public void onViewReleased(View releasedChild, float xvel, float yvel) {
             LayoutParams lp = (LayoutParams) releasedChild.getLayoutParams();
-            lp.onRelease();
+            lp.mViewAnimator.reset();
 //            mViewDragHelper.settleCapturedViewAt(lp.mResetPosX, lp.mResetPosY);
 //            invalidate();
         }
@@ -168,7 +164,7 @@ public class FeedBananaLayout extends FrameLayout {
             ViewGroup.LayoutParams vglp = child.getLayoutParams();
             if (vglp instanceof LayoutParams) {
                 LayoutParams lp = (LayoutParams) vglp;
-                lp.resolveAnchorView(this, child);
+                lp.prepare(this, child);
             }
         }
     }
@@ -176,16 +172,17 @@ public class FeedBananaLayout extends FrameLayout {
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
-        updateOffset();
+        onFinishLayout();
     }
 
-    private void updateOffset() {
+    private void onFinishLayout() {
         for (int i = 0; i < getChildCount(); ++i) {
             final View child = getChildAt(i);
             ViewGroup.LayoutParams vglp = child.getLayoutParams();
             if (vglp instanceof LayoutParams) {
                 LayoutParams lp = (LayoutParams) vglp;
                 lp.updateOffsetToAnchor(this, child, mTempRect);
+                lp.bindFollower(this);
             }
         }
     }
@@ -212,10 +209,9 @@ public class FeedBananaLayout extends FrameLayout {
 
     public static class LayoutParams extends FrameLayout.LayoutParams {
         int mAnchorId = View.NO_ID;
+        int mFollowerId = View.NO_ID;
         boolean mDraggable = false;
         int mThresholdRadius = 0;
-
-        LayoutParams mFollowerLP;
 
         private View mAnchorView;
         private ViewAnimator mViewAnimator;
@@ -225,9 +221,14 @@ public class FeedBananaLayout extends FrameLayout {
 
             TypedArray a = c.obtainStyledAttributes(attrs, R.styleable.FeedBananaLayout_LayoutParams);
             mAnchorId = a.getResourceId(R.styleable.FeedBananaLayout_LayoutParams_layout_view_ref, View.NO_ID);
+            mFollowerId = a.getResourceId(R.styleable.FeedBananaLayout_LayoutParams_banana_follower, View.NO_ID);
             mDraggable = a.getBoolean(R.styleable.FeedBananaLayout_LayoutParams_banana_draggable, false);
             mThresholdRadius = a.getDimensionPixelSize(R.styleable.FeedBananaLayout_LayoutParams_banana_threshold_radius, 0);
             a.recycle();
+
+            if (mDraggable && mThresholdRadius > 0) {
+                throw new IllegalStateException("banana_threshold_radius and banana_draggable cannot both exist!");
+            }
         }
 
         public LayoutParams(int width, int height) {
@@ -251,23 +252,30 @@ public class FeedBananaLayout extends FrameLayout {
             super(source);
         }
 
-        private void initViewAnimator(SpringSystem springSystem, View child) {
-            if (mDraggable || mThresholdRadius > 0) {
-                mViewAnimator = new ViewAnimator(springSystem, child);
+        private void initViewAnimator(View child) {
+            if (mViewAnimator != null) {
+                return;
+            }
+            if (mThresholdRadius > 0) {
+                mViewAnimator = new FollowerViewAnimator(SpringConfig.fromOrigamiTensionAndFriction(15, 7), child);
+                ((FollowerViewAnimator) mViewAnimator).setThresholdRadius(mThresholdRadius);
+                return;
+            }
+            if (mDraggable) {
+                mViewAnimator = new DraggableViewAnimator(SpringConfig.fromOrigamiTensionAndFriction(15, 7), child);
             }
         }
 
-        void resolveAnchorView(FeedBananaLayout parent, View child) {
-            initViewAnimator(parent.mSpringSystem, child);
-            if (mAnchorId == View.NO_ID) {
-                return;
-            }
-            mAnchorView = parent.findViewById(mAnchorId);
-            if (mAnchorView != null) {
-                // make mAnchorView's layout_width and layout_height wrote in xml invalid
-                ViewGroup.LayoutParams lp = mAnchorView.getLayoutParams();
-                lp.width = this.width;
-                lp.height = this.height;
+        void prepare(FeedBananaLayout parent, View child) {
+            initViewAnimator(child);
+            if (mAnchorId != View.NO_ID) {
+                mAnchorView = parent.findViewById(mAnchorId);
+                if (mAnchorView != null) {
+                    // make mAnchorView's layout_width and layout_height wrote in xml invalid
+                    ViewGroup.LayoutParams lp = mAnchorView.getLayoutParams();
+                    lp.width = this.width;
+                    lp.height = this.height;
+                }
             }
         }
 
@@ -290,99 +298,19 @@ public class FeedBananaLayout extends FrameLayout {
             }
         }
 
-        void onRelease() {
-            mViewAnimator.reset();
-            if (mFollowerLP != null) {
-                mFollowerLP.onRelease();
-            }
-        }
-
-        void abortAnimation() {
-            mViewAnimator.abort();
-        }
-
-        void notifyFollower(int x, int y) {
-            if (mFollowerLP == null || mFollowerLP.mViewAnimator == null) {
+        void bindFollower(FeedBananaLayout parent) {
+            if (mFollowerId == View.NO_ID
+                    || mViewAnimator == null || !(mViewAnimator instanceof DraggableViewAnimator)) {
                 return;
             }
-            mFollowerLP.mViewAnimator.followPoint(x, y, mFollowerLP.mThresholdRadius);
-        }
-    }
-
-    static class ViewAnimator {
-        private Spring mSpringX;
-        private Spring mSpringY;
-        private View mView;
-
-        private int mResetPosX;
-        private int mResetPosY;
-
-        public ViewAnimator(SpringSystem springSystem, View view) {
-            mSpringX = springSystem.createSpring().setSpringConfig(SpringConfig.fromOrigamiTensionAndFriction(15, 7));
-            mSpringY = springSystem.createSpring().setSpringConfig(SpringConfig.fromOrigamiTensionAndFriction(15, 7));
-            mView = view;
-
-            mSpringX.addListener(new SimpleSpringListener() {
-                @Override
-                public void onSpringUpdate(Spring spring) {
-                    int intentPivotX = (int) spring.getCurrentValue();
-                    int currentPivotX = (mView.getLeft() + mView.getRight()) / 2;
-                    mView.offsetLeftAndRight(intentPivotX - currentPivotX);
-                }
-            });
-            mSpringY.addListener(new SimpleSpringListener() {
-                @Override
-                public void onSpringUpdate(Spring spring) {
-                    int intentPivotY = (int) spring.getCurrentValue();
-                    int currentPivotY = (mView.getTop() + mView.getBottom()) / 2;
-                    mView.offsetTopAndBottom(intentPivotY - currentPivotY);
-                }
-            });
-        }
-
-        void setResetPos(int x, int y) {
-            setCurrentPos(x, y);
-            mResetPosX = x;
-            mResetPosY = y;
-        }
-
-        void reset() {
-            setCurrentPos((mView.getLeft() + mView.getRight()) / 2, (mView.getTop() + mView.getBottom()) / 2);
-            animView(mResetPosX, mResetPosY);
-        }
-
-        void setCurrentPos(int pivotX, int pivotY) {
-            mSpringX.setCurrentValue(pivotX);
-            mSpringY.setCurrentValue(pivotY);
-        }
-
-        void followPoint(int intentX, int intentY, int thresholdRadius) {
-            int targetX = intentX;
-            int targetY = intentY;
-            if (thresholdRadius > 0) {
-                if (Math.pow(intentX - mResetPosX, 2) + Math.pow(intentY - mResetPosY, 2) > Math.pow(thresholdRadius, 2)) {
-                    if (intentX == mResetPosX) {
-                        targetX = mResetPosX;
-                        targetY = mResetPosY + thresholdRadius * (intentY > mResetPosY ? 1 : -1);
-                    } else {
-                        double rad = Math.atan((double) (mResetPosY - intentY) / (intentX - mResetPosX));
-                        targetX = mResetPosX + (int) (thresholdRadius * Math.cos(rad)) * (intentX > mResetPosX ? 1 : -1);
-                        targetY = mResetPosY - (int) (thresholdRadius * Math.sin(rad)) * (intentX > mResetPosX ? 1 : -1);
-                    }
-                }
+            final View followerView = parent.findViewById(mFollowerId);
+            if (followerView == null) {
+                throw new IllegalStateException("can not find banana_follower in FeedBananaLayout!");
             }
-
-            animView(targetX, targetY);
-        }
-
-        void animView(int endX, int endY) {
-            mSpringX.setEndValue(endX);
-            mSpringY.setEndValue(endY);
-        }
-
-        void abort() {
-            mSpringX.setAtRest();
-            mSpringY.setAtRest();
+            LayoutParams flp = (LayoutParams) followerView.getLayoutParams();
+            if (flp.mViewAnimator != null && flp.mViewAnimator instanceof FollowerViewAnimator) {
+                ((DraggableViewAnimator) mViewAnimator).setFollower((FollowerViewAnimator) flp.mViewAnimator);
+            }
         }
     }
 

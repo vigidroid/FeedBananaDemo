@@ -4,5 +4,6 @@
         <attr name="layout_view_ref" format="reference"/>
         <attr name="banana_threshold_radius" format="dimension"/>
         <attr name="banana_draggable" format="boolean"/>
+        <attr name="banana_follower" format="reference"/>
     </declare-styleable>
 </resources>

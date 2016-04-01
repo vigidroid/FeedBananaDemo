@@ -53,7 +53,6 @@ public class FeedBananaActivity extends AppCompatActivity implements View.OnClic
         mResetBt.setOnClickListener(this);
 
         mBananaView.setText(String.valueOf(mSelectBananaCount));
-        mFeedBananaLayout.makeFollow(mUploaderView, mBananaView);
         mFeedBananaLayout.setFeedActionListener(new FeedBananaLayout.FeedActionListener() {
             @Override
             public void bananaCaught(View banana) {
