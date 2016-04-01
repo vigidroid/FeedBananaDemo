@@ -19,7 +19,7 @@ import com.facebook.rebound.SpringConfig;
  * Created by Vigi on 2015/10/29.
  */
 public class FeedBananaLayout extends FrameLayout
-        implements DraggableViewAnimator.DraggableActionListener, FollowerViewAnimator.FollowerActionListener {
+        implements DraggableViewAnimator.DraggableActionListener, CatcherViewAnimator.CatcherActionListener {
     private static final float SCALE_LARGE = 1.2f;
 
     public static final int STATE_INIT = 0;
@@ -84,6 +84,11 @@ public class FeedBananaLayout extends FrameLayout
     }
 
     @Override
+    public void fallInDanger(View catcher, View view) {
+
+    }
+
+    @Override
     public void onViewIdle(View view) {
         if (mFeedActionListener != null) {
             mFeedActionListener.bananaPutBack(view);
@@ -91,12 +96,7 @@ public class FeedBananaLayout extends FrameLayout
     }
 
     @Override
-    public void onDistanceChange(View follower, int distance) {
-
-    }
-
-    @Override
-    public void onFollowerIdle(View follower) {
+    public void onCatcherIdle(View catcher) {
 
     }
 
@@ -178,7 +178,7 @@ public class FeedBananaLayout extends FrameLayout
             if (vglp instanceof LayoutParams) {
                 LayoutParams lp = (LayoutParams) vglp;
                 lp.updateOffsetToAnchor(this, child, mTempRect);
-                lp.bindFollower(this);
+                lp.bindCatcher(this);
             }
         }
     }
@@ -205,7 +205,7 @@ public class FeedBananaLayout extends FrameLayout
 
     public static class LayoutParams extends FrameLayout.LayoutParams {
         int mAnchorId = View.NO_ID;
-        int mFollowerId = View.NO_ID;
+        int mCatcherId = View.NO_ID;
         boolean mDraggable = false;
         int mThresholdRadius = 0;
 
@@ -217,7 +217,7 @@ public class FeedBananaLayout extends FrameLayout
 
             TypedArray a = c.obtainStyledAttributes(attrs, R.styleable.FeedBananaLayout_LayoutParams);
             mAnchorId = a.getResourceId(R.styleable.FeedBananaLayout_LayoutParams_layout_view_ref, View.NO_ID);
-            mFollowerId = a.getResourceId(R.styleable.FeedBananaLayout_LayoutParams_banana_follower, View.NO_ID);
+            mCatcherId = a.getResourceId(R.styleable.FeedBananaLayout_LayoutParams_banana_catcher, View.NO_ID);
             mDraggable = a.getBoolean(R.styleable.FeedBananaLayout_LayoutParams_banana_draggable, false);
             mThresholdRadius = a.getDimensionPixelSize(R.styleable.FeedBananaLayout_LayoutParams_banana_threshold_radius, 0);
             a.recycle();
@@ -253,10 +253,10 @@ public class FeedBananaLayout extends FrameLayout
                 return;
             }
             if (mThresholdRadius > 0) {
-                mViewAnimator = new FollowerViewAnimator(
+                mViewAnimator = new CatcherViewAnimator(
                         SpringConfig.fromOrigamiTensionAndFriction(30, 15), child, parent
                 );
-                ((FollowerViewAnimator) mViewAnimator).setThresholdRadius(mThresholdRadius);
+                ((CatcherViewAnimator) mViewAnimator).setThresholdRadius(mThresholdRadius);
                 return;
             }
             if (mDraggable) {
@@ -296,18 +296,18 @@ public class FeedBananaLayout extends FrameLayout
             }
         }
 
-        void bindFollower(FeedBananaLayout parent) {
-            if (mFollowerId == View.NO_ID
+        void bindCatcher(FeedBananaLayout parent) {
+            if (mCatcherId == View.NO_ID
                     || mViewAnimator == null || !(mViewAnimator instanceof DraggableViewAnimator)) {
                 return;
             }
-            final View followerView = parent.findViewById(mFollowerId);
-            if (followerView == null) {
-                throw new IllegalStateException("can not find banana_follower in FeedBananaLayout!");
+            final View catcherView = parent.findViewById(mCatcherId);
+            if (catcherView == null) {
+                throw new IllegalStateException("can not find banana_catcher in FeedBananaLayout!");
             }
-            LayoutParams flp = (LayoutParams) followerView.getLayoutParams();
-            if (flp.mViewAnimator != null && flp.mViewAnimator instanceof FollowerViewAnimator) {
-                ((DraggableViewAnimator) mViewAnimator).setFollower((FollowerViewAnimator) flp.mViewAnimator);
+            LayoutParams flp = (LayoutParams) catcherView.getLayoutParams();
+            if (flp.mViewAnimator != null && flp.mViewAnimator instanceof CatcherViewAnimator) {
+                ((DraggableViewAnimator) mViewAnimator).setCatcher((CatcherViewAnimator) flp.mViewAnimator);
             }
         }
     }
@@ -317,7 +317,9 @@ public class FeedBananaLayout extends FrameLayout
 
         void bananaPutBack(View banana);
 
-        void onDistanceChange(View banana, View uploader);
+        void uploaderSeen(View banana, View uploader);
+
+        void uploaderMissed(View banana, View uploader);
 
         void beEatOff(View banana, View uploader);
     }

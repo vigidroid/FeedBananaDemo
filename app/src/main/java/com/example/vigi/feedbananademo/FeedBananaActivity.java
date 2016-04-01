@@ -59,7 +59,12 @@ public class FeedBananaActivity extends AppCompatActivity implements View.OnClic
             }
 
             @Override
-            public void onDistanceChange(View banana, View uploader) {
+            public void uploaderSeen(View banana, View uploader) {
+
+            }
+
+            @Override
+            public void uploaderMissed(View banana, View uploader) {
 
             }
 

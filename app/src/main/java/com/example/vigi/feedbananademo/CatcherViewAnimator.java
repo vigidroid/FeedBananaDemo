@@ -9,18 +9,18 @@ import com.facebook.rebound.SpringConfig;
 /**
  * Created by Vigi on 2016/3/31.
  */
-public class FollowerViewAnimator extends ViewAnimator {
+public class CatcherViewAnimator extends ViewAnimator {
     private int mThresholdRadius = 0;
     private boolean mIsFollowing = false;
-    private FollowerActionListener mListener;
+    private CatcherActionListener mListener;
     private int mTempX;
     private int mTempY;
 
-    public FollowerViewAnimator(View view, FollowerActionListener listener) {
+    public CatcherViewAnimator(View view, CatcherActionListener listener) {
         this(null, view, listener);
     }
 
-    public FollowerViewAnimator(SpringConfig springConfig, View view, FollowerActionListener listener) {
+    public CatcherViewAnimator(SpringConfig springConfig, View view, CatcherActionListener listener) {
         super(springConfig, view);
         mListener = listener;
         mSpringX.addListener(new SimpleSpringListener() {
@@ -50,7 +50,7 @@ public class FollowerViewAnimator extends ViewAnimator {
     private void checkListener() {
         if (mListener != null && !mIsFollowing
                 && mTempX == mResetPosX && mTempY == mResetPosY) {
-            mListener.onFollowerIdle(mView);
+            mListener.onCatcherIdle(mView);
         }
     }
 
@@ -60,7 +60,7 @@ public class FollowerViewAnimator extends ViewAnimator {
         mIsFollowing = false;
     }
 
-    void followPoint(int intentX, int intentY) {
+    void catchPoint(int intentX, int intentY) {
         mIsFollowing = true;
         int targetX = intentX;
         int targetY = intentY;
@@ -82,9 +82,7 @@ public class FollowerViewAnimator extends ViewAnimator {
         animView(targetX, targetY);
     }
 
-    public interface FollowerActionListener {
-        void onDistanceChange(View follower, int distance);
-
-        void onFollowerIdle(View follower);
+    public interface CatcherActionListener {
+        void onCatcherIdle(View catcher);
     }
 }

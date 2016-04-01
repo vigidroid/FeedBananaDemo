@@ -94,6 +94,6 @@
         android:text="1"
         android:textSize="20sp"
         app:banana_draggable="true"
-        app:banana_follower="@id/uploader_view"
+        app:banana_catcher="@id/uploader_view"
         app:layout_view_ref="@id/banana_place_holder"/>
 </com.example.vigi.feedbananademo.FeedBananaLayout>

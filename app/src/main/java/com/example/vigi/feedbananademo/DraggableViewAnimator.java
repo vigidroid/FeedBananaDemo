@@ -10,7 +10,7 @@ import com.facebook.rebound.SpringConfig;
  * Created by Vigi on 2016/3/31.
  */
 public class DraggableViewAnimator extends ViewAnimator {
-    private FollowerViewAnimator mFollower;
+    private CatcherViewAnimator mCatcher;
     private boolean mDragging = false;
     private DraggableActionListener mListener;
     private int mTempX;
@@ -49,32 +49,34 @@ public class DraggableViewAnimator extends ViewAnimator {
     public void onStartDrag() {
         abortAnimation();
         mDragging = true;
-        notifyFollower(getViewPivotX(), getViewPivotY());
+        notifyCatcher(getViewPivotX(), getViewPivotY());
     }
 
     public void onRelease() {
         mDragging = false;
         reset();
-        if (mFollower != null) {
-            mFollower.reset();
+        if (mCatcher != null) {
+            mCatcher.reset();
         }
     }
 
     public void onPositionChange(int x, int y) {
-        notifyFollower(x, y);
+        notifyCatcher(x, y);
     }
 
-    public void setFollower(FollowerViewAnimator follower) {
-        mFollower = follower;
+    public void setCatcher(CatcherViewAnimator catcher) {
+        mCatcher = catcher;
     }
 
-    private void notifyFollower(int x, int y) {
-        if (mFollower != null) {
-            mFollower.followPoint(x, y);
+    private void notifyCatcher(int x, int y) {
+        if (mCatcher != null) {
+            mCatcher.catchPoint(x, y);
         }
     }
 
     public interface DraggableActionListener {
+        void fallInDanger(View catcher, View view);
+
         void onViewIdle(View view);
     }
 }
