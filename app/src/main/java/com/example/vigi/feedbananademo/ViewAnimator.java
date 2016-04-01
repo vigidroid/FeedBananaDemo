@@ -13,8 +13,8 @@ import com.facebook.rebound.SpringSystem;
 public abstract class ViewAnimator {
     private static final SpringSystem SPRING_SYSTEM = SpringSystem.create();
 
-    private Spring mSpringX;
-    private Spring mSpringY;
+    protected Spring mSpringX;
+    protected Spring mSpringY;
 
     protected View mView;
     protected int mResetPosX;
@@ -36,17 +36,13 @@ public abstract class ViewAnimator {
         mSpringX.addListener(new SimpleSpringListener() {
             @Override
             public void onSpringUpdate(Spring spring) {
-                int intentPivotX = (int) spring.getCurrentValue();
-                int currentPivotX = (int) (mView.getX() + mView.getWidth() / 2);
-                mView.offsetLeftAndRight(intentPivotX - currentPivotX);
+                mView.offsetLeftAndRight((int) spring.getCurrentValue() - getViewPivotX());
             }
         });
         mSpringY.addListener(new SimpleSpringListener() {
             @Override
             public void onSpringUpdate(Spring spring) {
-                int intentPivotY = (int) spring.getCurrentValue();
-                int currentPivotY = (int) (mView.getY() + mView.getHeight() / 2);
-                mView.offsetTopAndBottom(intentPivotY - currentPivotY);
+                mView.offsetTopAndBottom((int) spring.getCurrentValue() - getViewPivotY());
             }
         });
     }
@@ -63,7 +59,7 @@ public abstract class ViewAnimator {
     }
 
     public void reset() {
-        setCurrentPos((int) (mView.getX() + mView.getWidth() / 2), (int) (mView.getY() + mView.getHeight() / 2));
+        setCurrentPos(getViewPivotX(), getViewPivotY());
         animView(mResetPosX, mResetPosY);
     }
 
@@ -72,8 +68,16 @@ public abstract class ViewAnimator {
         mSpringY.setEndValue(endY);
     }
 
-    public void abort() {
+    public void abortAnimation() {
         mSpringX.setAtRest();
         mSpringY.setAtRest();
+    }
+
+    public int getViewPivotX() {
+        return (int) (mView.getX() + mView.getWidth() / 2);
+    }
+
+    public int getViewPivotY() {
+        return (int) (mView.getY() + mView.getHeight() / 2);
     }
 }

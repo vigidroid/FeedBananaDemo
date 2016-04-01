@@ -1,6 +1,5 @@
 package com.example.vigi.feedbananademo;
 
-import android.animation.AnimatorSet;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -19,7 +18,8 @@ import com.facebook.rebound.SpringConfig;
 /**
  * Created by Vigi on 2015/10/29.
  */
-public class FeedBananaLayout extends FrameLayout {
+public class FeedBananaLayout extends FrameLayout
+        implements DraggableViewAnimator.DraggableActionListener, FollowerViewAnimator.FollowerActionListener {
     private static final float SCALE_LARGE = 1.2f;
 
     public static final int STATE_INIT = 0;
@@ -28,11 +28,10 @@ public class FeedBananaLayout extends FrameLayout {
     public static final int STATE_FINISHED = 3;
 
     private ViewDragHelper mViewDragHelper;
+    private ViewDragCallBack mDragCallBack;
 
     private FeedActionListener mFeedActionListener;
     private int mState = STATE_INIT;
-
-    private AnimatorSet mAnimatorSet;
 
     private final Rect mTempRect = new Rect();
 
@@ -58,25 +57,8 @@ public class FeedBananaLayout extends FrameLayout {
     }
 
     private void init() {
-        mViewDragHelper = ViewDragHelper.create(this, new ViewDragCallBack());
-    }
-
-    public void makeFollow(View uploader, View banana) {
-        ViewGroup.LayoutParams uvglp = uploader.getLayoutParams();
-        ViewGroup.LayoutParams bvglp = banana.getLayoutParams();
-        if (!(uvglp instanceof LayoutParams) || !(bvglp instanceof LayoutParams)) {
-            throw new IllegalArgumentException("uploader and banana must in the root hierarchy of FeedBananaLayout!");
-        }
-        LayoutParams ulp = (LayoutParams) uvglp;
-        LayoutParams blp = (LayoutParams) bvglp;
-        if (ulp.mThresholdRadius <= 0) {
-            // uploader has no space to follow
-            return;
-        }
-        if (!blp.mDraggable) {
-            // banana cannot be dragged thus we ignore
-            return;
-        }
+        mDragCallBack = new ViewDragCallBack();
+        mViewDragHelper = ViewDragHelper.create(this, mDragCallBack);
     }
 
     public void setFeedActionListener(FeedActionListener feedActionListener) {
@@ -101,6 +83,23 @@ public class FeedBananaLayout extends FrameLayout {
         }
     }
 
+    @Override
+    public void onViewIdle(View view) {
+        if (mFeedActionListener != null) {
+            mFeedActionListener.bananaPutBack(view);
+        }
+    }
+
+    @Override
+    public void onDistanceChange(View follower, int distance) {
+
+    }
+
+    @Override
+    public void onFollowerIdle(View follower) {
+
+    }
+
     class ViewDragCallBack extends ViewDragHelper.Callback {
 
         @Override
@@ -115,30 +114,27 @@ public class FeedBananaLayout extends FrameLayout {
                 mFeedActionListener.bananaCaught(capturedChild);
             }
             LayoutParams lp = (LayoutParams) capturedChild.getLayoutParams();
-            lp.mViewAnimator.abort();
-            notifyFollow(capturedChild);
+            if (lp.mViewAnimator != null && lp.mViewAnimator instanceof DraggableViewAnimator) {
+                ((DraggableViewAnimator) lp.mViewAnimator).onStartDrag();
+            }
         }
 
         @Override
         public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
-            notifyFollow(changedView);
-        }
-
-        private void notifyFollow(View capturedChild) {
-            LayoutParams lp = (LayoutParams) capturedChild.getLayoutParams();
-            final int targetPivotX = capturedChild.getLeft() + capturedChild.getWidth() / 2;
-            final int targetPivotY = capturedChild.getTop() + capturedChild.getHeight() / 2;
+            LayoutParams lp = (LayoutParams) changedView.getLayoutParams();
             if (lp.mViewAnimator != null && lp.mViewAnimator instanceof DraggableViewAnimator) {
-                ((DraggableViewAnimator) lp.mViewAnimator).notifyFollower(targetPivotX, targetPivotY);
+                ((DraggableViewAnimator) lp.mViewAnimator).onPositionChange(
+                        lp.mViewAnimator.getViewPivotX(), lp.mViewAnimator.getViewPivotY()
+                );
             }
         }
 
         @Override
         public void onViewReleased(View releasedChild, float xvel, float yvel) {
             LayoutParams lp = (LayoutParams) releasedChild.getLayoutParams();
-            lp.mViewAnimator.reset();
-//            mViewDragHelper.settleCapturedViewAt(lp.mResetPosX, lp.mResetPosY);
-//            invalidate();
+            if (lp.mViewAnimator != null && lp.mViewAnimator instanceof DraggableViewAnimator) {
+                ((DraggableViewAnimator) lp.mViewAnimator).onRelease();
+            }
         }
 
         @Override
@@ -252,22 +248,24 @@ public class FeedBananaLayout extends FrameLayout {
             super(source);
         }
 
-        private void initViewAnimator(View child) {
+        private void initViewAnimator(FeedBananaLayout parent, View child) {
             if (mViewAnimator != null) {
                 return;
             }
             if (mThresholdRadius > 0) {
-                mViewAnimator = new FollowerViewAnimator(SpringConfig.fromOrigamiTensionAndFriction(15, 7), child);
+                mViewAnimator = new FollowerViewAnimator(
+                        SpringConfig.fromOrigamiTensionAndFriction(30, 15), child, parent
+                );
                 ((FollowerViewAnimator) mViewAnimator).setThresholdRadius(mThresholdRadius);
                 return;
             }
             if (mDraggable) {
-                mViewAnimator = new DraggableViewAnimator(SpringConfig.fromOrigamiTensionAndFriction(15, 7), child);
+                mViewAnimator = new DraggableViewAnimator(child, parent);
             }
         }
 
         void prepare(FeedBananaLayout parent, View child) {
-            initViewAnimator(child);
+            initViewAnimator(parent, child);
             if (mAnchorId != View.NO_ID) {
                 mAnchorView = parent.findViewById(mAnchorId);
                 if (mAnchorView != null) {
@@ -319,9 +317,7 @@ public class FeedBananaLayout extends FrameLayout {
 
         void bananaPutBack(View banana);
 
-        void uploaderSeen(View banana, View uploader);
-
-        void uploaderMissed(View banana, View uploader);
+        void onDistanceChange(View banana, View uploader);
 
         void beEatOff(View banana, View uploader);
     }

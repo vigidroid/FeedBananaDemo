@@ -2,6 +2,8 @@ package com.example.vigi.feedbananademo;
 
 import android.view.View;
 
+import com.facebook.rebound.SimpleSpringListener;
+import com.facebook.rebound.Spring;
 import com.facebook.rebound.SpringConfig;
 
 /**
@@ -9,13 +11,32 @@ import com.facebook.rebound.SpringConfig;
  */
 public class FollowerViewAnimator extends ViewAnimator {
     private int mThresholdRadius = 0;
+    private boolean mIsFollowing = false;
+    private FollowerActionListener mListener;
+    private int mTempX;
+    private int mTempY;
 
-    public FollowerViewAnimator(SpringConfig springConfig, View view) {
-        super(springConfig, view);
+    public FollowerViewAnimator(View view, FollowerActionListener listener) {
+        this(null, view, listener);
     }
 
-    public FollowerViewAnimator(View view) {
-        super(view);
+    public FollowerViewAnimator(SpringConfig springConfig, View view, FollowerActionListener listener) {
+        super(springConfig, view);
+        mListener = listener;
+        mSpringX.addListener(new SimpleSpringListener() {
+            @Override
+            public void onSpringUpdate(Spring spring) {
+                mTempX = (int) spring.getCurrentValue();
+                checkListener();
+            }
+        });
+        mSpringY.addListener(new SimpleSpringListener() {
+            @Override
+            public void onSpringUpdate(Spring spring) {
+                mTempY = (int) spring.getCurrentValue();
+                checkListener();
+            }
+        });
     }
 
     public int getThresholdRadius() {
@@ -26,7 +47,21 @@ public class FollowerViewAnimator extends ViewAnimator {
         mThresholdRadius = thresholdRadius;
     }
 
+    private void checkListener() {
+        if (mListener != null && !mIsFollowing
+                && mTempX == mResetPosX && mTempY == mResetPosY) {
+            mListener.onFollowerIdle(mView);
+        }
+    }
+
+    @Override
+    public void reset() {
+        super.reset();
+        mIsFollowing = false;
+    }
+
     void followPoint(int intentX, int intentY) {
+        mIsFollowing = true;
         int targetX = intentX;
         int targetY = intentY;
         if (mThresholdRadius <= 0) {
@@ -45,5 +80,11 @@ public class FollowerViewAnimator extends ViewAnimator {
         }
 
         animView(targetX, targetY);
+    }
+
+    public interface FollowerActionListener {
+        void onDistanceChange(View follower, int distance);
+
+        void onFollowerIdle(View follower);
     }
 }

@@ -19,14 +19,8 @@ public class FeedBananaActivity extends AppCompatActivity implements View.OnClic
     @Bind(R.id.feed_banana_layout)
     FeedBananaLayout mFeedBananaLayout;
 
-    @Bind(R.id.uploader_place_holder)
-    Space mUploaderPlaceHolder;
-
     @Bind(R.id.banana_decrease_bt)
     View mDecreaseBt;
-
-    @Bind(R.id.banana_place_holder)
-    Space mBananaPlaceHolder;
 
     @Bind(R.id.banana_increase_bt)
     View mIncreaseBt;
@@ -56,21 +50,16 @@ public class FeedBananaActivity extends AppCompatActivity implements View.OnClic
         mFeedBananaLayout.setFeedActionListener(new FeedBananaLayout.FeedActionListener() {
             @Override
             public void bananaCaught(View banana) {
-//                banana.animate().scaleX(1.3f).scaleY(1.3f).start();
+                banana.animate().scaleX(1.3f).scaleY(1.3f).start();
             }
 
             @Override
             public void bananaPutBack(View banana) {
-
+                banana.animate().scaleX(1.0f).scaleY(1.0f).start();
             }
 
             @Override
-            public void uploaderSeen(View banana, View uploader) {
-
-            }
-
-            @Override
-            public void uploaderMissed(View banana, View uploader) {
+            public void onDistanceChange(View banana, View uploader) {
 
             }
 
