@@ -15,25 +15,21 @@ import android.widget.FrameLayout;
 
 import com.facebook.rebound.SpringConfig;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by Vigi on 2015/10/29.
  */
 public class FeedBananaLayout extends FrameLayout
         implements DraggableViewAnimator.DraggableActionListener, CatcherViewAnimator.CatcherActionListener {
-    private static final float SCALE_LARGE = 1.2f;
-
-    public static final int STATE_INIT = 0;
-    public static final int STATE_EATING = 1;
-    public static final int STATE_FAILURE = 2;
-    public static final int STATE_FINISHED = 3;
 
     private ViewDragHelper mViewDragHelper;
     private ViewDragCallBack mDragCallBack;
+    private Map<View, Boolean> mBananasState = new HashMap<>();
+    private final Rect mTempRect = new Rect();
 
     private FeedActionListener mFeedActionListener;
-    private int mState = STATE_INIT;
-
-    private final Rect mTempRect = new Rect();
 
     public FeedBananaLayout(Context context) {
         super(context);
@@ -84,19 +80,41 @@ public class FeedBananaLayout extends FrameLayout
     }
 
     @Override
-    public void fallInDanger(View catcher, View view) {
+    public void onDistanceChanged(CatcherViewAnimator catcherAnimator
+            , DraggableViewAnimator viewAnimator, int distance) {
+        boolean isSeen = catcherAnimator.getThresholdRadius() > distance;
+        boolean changed = false;
 
-    }
+        Boolean stateSaved = mBananasState.get(viewAnimator.getView());
+        if (stateSaved == null) {
+            mBananasState.put(viewAnimator.getView(), isSeen);
+        } else if (!stateSaved.equals(isSeen)) {
+            changed = true;
+            mBananasState.put(viewAnimator.getView(), isSeen);
+        }
 
-    @Override
-    public void onViewIdle(View view) {
-        if (mFeedActionListener != null) {
-            mFeedActionListener.bananaPutBack(view);
+        if (changed && mFeedActionListener != null) {
+            if (isSeen) {
+                mFeedActionListener.uploaderSeen(
+                        catcherAnimator, viewAnimator
+                );
+            } else {
+                mFeedActionListener.uploaderMissed(
+                        catcherAnimator, viewAnimator
+                );
+            }
         }
     }
 
     @Override
-    public void onCatcherIdle(View catcher) {
+    public void onViewIdle(DraggableViewAnimator viewAnimator) {
+        if (mFeedActionListener != null) {
+            mFeedActionListener.bananaPutBack(viewAnimator);
+        }
+    }
+
+    @Override
+    public void onCatcherIdle(CatcherViewAnimator catcherAnimator) {
 
     }
 
@@ -105,18 +123,18 @@ public class FeedBananaLayout extends FrameLayout
         @Override
         public boolean tryCaptureView(View child, int pointerId) {
             LayoutParams lp = (LayoutParams) child.getLayoutParams();
-            return lp.mDraggable;
+            return lp.mViewAnimator instanceof DraggableViewAnimator;
         }
 
         @Override
         public void onViewCaptured(View capturedChild, int activePointerId) {
-            if (mFeedActionListener != null) {
-                mFeedActionListener.bananaCaught(capturedChild);
-            }
             LayoutParams lp = (LayoutParams) capturedChild.getLayoutParams();
-            if (lp.mViewAnimator != null && lp.mViewAnimator instanceof DraggableViewAnimator) {
-                ((DraggableViewAnimator) lp.mViewAnimator).onStartDrag();
+            DraggableViewAnimator dragViewAnimator = (DraggableViewAnimator) lp.mViewAnimator;
+
+            if (mFeedActionListener != null) {
+                mFeedActionListener.bananaCaught(dragViewAnimator);
             }
+            dragViewAnimator.onStartDrag();
         }
 
         @Override
@@ -131,9 +149,25 @@ public class FeedBananaLayout extends FrameLayout
 
         @Override
         public void onViewReleased(View releasedChild, float xvel, float yvel) {
+            boolean isReleaseView = true;
+            DraggableViewAnimator bananaAnimator;
+
             LayoutParams lp = (LayoutParams) releasedChild.getLayoutParams();
             if (lp.mViewAnimator != null && lp.mViewAnimator instanceof DraggableViewAnimator) {
-                ((DraggableViewAnimator) lp.mViewAnimator).onRelease();
+                bananaAnimator = (DraggableViewAnimator) lp.mViewAnimator;
+            } else {
+                throw new IllegalStateException("the view be dragged must has \"banana_draggable\" in xml!");
+            }
+
+            Boolean currState = mBananasState.get(releasedChild);
+            if (mFeedActionListener != null && currState != null && currState.equals(true)) {
+                if (mFeedActionListener.beEatOff(bananaAnimator.getCatcher(), bananaAnimator)) {
+                    isReleaseView = false;
+                }
+            }
+
+            if (isReleaseView) {
+                bananaAnimator.onRelease();
             }
         }
 
@@ -204,13 +238,13 @@ public class FeedBananaLayout extends FrameLayout
     }
 
     public static class LayoutParams extends FrameLayout.LayoutParams {
-        int mAnchorId = View.NO_ID;
-        int mCatcherId = View.NO_ID;
-        boolean mDraggable = false;
-        int mThresholdRadius = 0;
+        private int mAnchorId = View.NO_ID;
+        private int mCatcherId = View.NO_ID;
+        private boolean mDraggable = false;
+        private int mThresholdRadius = 0;
 
         private View mAnchorView;
-        private ViewAnimator mViewAnimator;
+        ViewAnimator mViewAnimator;
 
         public LayoutParams(Context c, AttributeSet attrs) {
             super(c, attrs);
@@ -313,14 +347,14 @@ public class FeedBananaLayout extends FrameLayout
     }
 
     public interface FeedActionListener {
-        void bananaCaught(View banana);
+        void bananaCaught(DraggableViewAnimator bananaAnimator);
 
-        void bananaPutBack(View banana);
+        void bananaPutBack(DraggableViewAnimator bananaAnimator);
 
-        void uploaderSeen(View banana, View uploader);
+        void uploaderSeen(CatcherViewAnimator uploaderAnimator, DraggableViewAnimator bananaAnimator);
 
-        void uploaderMissed(View banana, View uploader);
+        void uploaderMissed(CatcherViewAnimator uploaderAnimator, DraggableViewAnimator bananaAnimator);
 
-        void beEatOff(View banana, View uploader);
+        boolean beEatOff(CatcherViewAnimator uploaderAnimator, DraggableViewAnimator bananaAnimator);
     }
 }

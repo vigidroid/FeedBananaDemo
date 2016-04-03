@@ -16,7 +16,7 @@ public abstract class ViewAnimator {
     protected Spring mSpringX;
     protected Spring mSpringY;
 
-    protected View mView;
+    private View mView;
     protected int mResetPosX;
     protected int mResetPosY;
 
@@ -71,6 +71,10 @@ public abstract class ViewAnimator {
     public void abortAnimation() {
         mSpringX.setAtRest();
         mSpringY.setAtRest();
+    }
+
+    public View getView() {
+        return mView;
     }
 
     public int getViewPivotX() {

@@ -79,7 +79,7 @@
         android:layout_height="100dp"
         android:scaleType="centerCrop"
         android:src="@drawable/uploader_doge"
-        app:banana_threshold_radius="60dp"
+        app:banana_threshold_radius="110dp"
         app:layout_view_ref="@id/uploader_place_holder"
         app:riv_border_color="#993333"
         app:riv_border_width="2dp"

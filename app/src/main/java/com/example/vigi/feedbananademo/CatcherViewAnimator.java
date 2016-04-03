@@ -50,7 +50,7 @@ public class CatcherViewAnimator extends ViewAnimator {
     private void checkListener() {
         if (mListener != null && !mIsFollowing
                 && mTempX == mResetPosX && mTempY == mResetPosY) {
-            mListener.onCatcherIdle(mView);
+            mListener.onCatcherIdle(this);
         }
     }
 
@@ -62,20 +62,21 @@ public class CatcherViewAnimator extends ViewAnimator {
 
     void catchPoint(int intentX, int intentY) {
         mIsFollowing = true;
+        final int bound = mThresholdRadius - getView().getWidth() / 2;
         int targetX = intentX;
         int targetY = intentY;
-        if (mThresholdRadius <= 0) {
+        if (bound <= 0) {
             animView(targetX, targetY);
             return;
         }
-        if (Math.pow(intentX - mResetPosX, 2) + Math.pow(intentY - mResetPosY, 2) > Math.pow(mThresholdRadius, 2)) {
+        if (Math.pow(intentX - mResetPosX, 2) + Math.pow(intentY - mResetPosY, 2) > Math.pow(bound, 2)) {
             if (intentX == mResetPosX) {
                 targetX = mResetPosX;
-                targetY = mResetPosY + mThresholdRadius * (intentY > mResetPosY ? 1 : -1);
+                targetY = mResetPosY + bound * (intentY > mResetPosY ? 1 : -1);
             } else {
                 double rad = Math.atan((double) (mResetPosY - intentY) / (intentX - mResetPosX));
-                targetX = mResetPosX + (int) (mThresholdRadius * Math.cos(rad)) * (intentX > mResetPosX ? 1 : -1);
-                targetY = mResetPosY - (int) (mThresholdRadius * Math.sin(rad)) * (intentX > mResetPosX ? 1 : -1);
+                targetX = mResetPosX + (int) (bound * Math.cos(rad)) * (intentX > mResetPosX ? 1 : -1);
+                targetY = mResetPosY - (int) (bound * Math.sin(rad)) * (intentX > mResetPosX ? 1 : -1);
             }
         }
 
@@ -83,6 +84,6 @@ public class CatcherViewAnimator extends ViewAnimator {
     }
 
     public interface CatcherActionListener {
-        void onCatcherIdle(View catcher);
+        void onCatcherIdle(CatcherViewAnimator catcherAnimator);
     }
 }

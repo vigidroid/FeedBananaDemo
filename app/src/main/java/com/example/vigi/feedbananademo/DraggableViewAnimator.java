@@ -42,41 +42,61 @@ public class DraggableViewAnimator extends ViewAnimator {
     private void checkListener() {
         if (mListener != null && !mDragging
                 && mTempX == mResetPosX && mTempY == mResetPosY) {
-            mListener.onViewIdle(mView);
+            mListener.onViewIdle(this);
         }
     }
 
     public void onStartDrag() {
         abortAnimation();
         mDragging = true;
-        notifyCatcher(getViewPivotX(), getViewPivotY());
+        coordinateWithCatcher(getViewPivotX(), getViewPivotY());
     }
 
     public void onRelease() {
         mDragging = false;
         reset();
+        if (mListener != null) {
+            mListener.onDistanceChanged(mCatcher, this,
+                    (int) Math.sqrt(
+                            (mResetPosX - mCatcher.mResetPosX) * (mResetPosX - mCatcher.mResetPosX)
+                                    + (mResetPosY - mCatcher.mResetPosY) * (mResetPosY - mCatcher.mResetPosY)
+                    )
+            );
+        }
         if (mCatcher != null) {
             mCatcher.reset();
         }
     }
 
     public void onPositionChange(int x, int y) {
-        notifyCatcher(x, y);
+        coordinateWithCatcher(x, y);
     }
 
     public void setCatcher(CatcherViewAnimator catcher) {
         mCatcher = catcher;
     }
 
-    private void notifyCatcher(int x, int y) {
+    public CatcherViewAnimator getCatcher() {
+        return mCatcher;
+    }
+
+    private void coordinateWithCatcher(int x, int y) {
         if (mCatcher != null) {
             mCatcher.catchPoint(x, y);
+            if (mListener != null) {
+                mListener.onDistanceChanged(mCatcher, this,
+                        (int) Math.sqrt(
+                                (x - mCatcher.mResetPosX) * (x - mCatcher.mResetPosX)
+                                        + (y - mCatcher.mResetPosY) * (y - mCatcher.mResetPosY)
+                        ));
+            }
         }
     }
 
     public interface DraggableActionListener {
-        void fallInDanger(View catcher, View view);
+        void onDistanceChanged(CatcherViewAnimator catcherAnimator
+                , DraggableViewAnimator viewAnimator, int distance);
 
-        void onViewIdle(View view);
+        void onViewIdle(DraggableViewAnimator viewAnimator);
     }
 }
