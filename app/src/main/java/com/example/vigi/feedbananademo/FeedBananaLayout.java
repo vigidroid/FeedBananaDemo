@@ -61,6 +61,14 @@ public class FeedBananaLayout extends FrameLayout
         mFeedActionListener = feedActionListener;
     }
 
+    public ViewAnimator retrieveAnimator(View view) {
+        ViewGroup.LayoutParams lp = view.getLayoutParams();
+        if (lp instanceof LayoutParams) {
+            return ((LayoutParams) lp).mViewAnimator;
+        }
+        return null;
+    }
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         return mViewDragHelper.shouldInterceptTouchEvent(ev);
@@ -96,11 +104,11 @@ public class FeedBananaLayout extends FrameLayout
         if (changed && mFeedActionListener != null) {
             if (isSeen) {
                 mFeedActionListener.uploaderSeen(
-                        catcherAnimator, viewAnimator
+                        catcherAnimator.getView(), viewAnimator.getView()
                 );
             } else {
                 mFeedActionListener.uploaderMissed(
-                        catcherAnimator, viewAnimator
+                        catcherAnimator.getView(), viewAnimator.getView()
                 );
             }
         }
@@ -109,7 +117,7 @@ public class FeedBananaLayout extends FrameLayout
     @Override
     public void onViewIdle(DraggableViewAnimator viewAnimator) {
         if (mFeedActionListener != null) {
-            mFeedActionListener.bananaPutBack(viewAnimator);
+            mFeedActionListener.bananaPutBack(viewAnimator.getView());
         }
     }
 
@@ -132,7 +140,7 @@ public class FeedBananaLayout extends FrameLayout
             DraggableViewAnimator dragViewAnimator = (DraggableViewAnimator) lp.mViewAnimator;
 
             if (mFeedActionListener != null) {
-                mFeedActionListener.bananaCaught(dragViewAnimator);
+                mFeedActionListener.bananaCaught(capturedChild);
             }
             dragViewAnimator.onStartDrag();
         }
@@ -161,7 +169,7 @@ public class FeedBananaLayout extends FrameLayout
 
             Boolean currState = mBananasState.get(releasedChild);
             if (mFeedActionListener != null && currState != null && currState.equals(true)) {
-                if (mFeedActionListener.beEatOff(bananaAnimator.getCatcher(), bananaAnimator)) {
+                if (mFeedActionListener.beEatOff(bananaAnimator.getCatcher().getView(), releasedChild)) {
                     isReleaseView = false;
                 }
             }
@@ -347,14 +355,14 @@ public class FeedBananaLayout extends FrameLayout
     }
 
     public interface FeedActionListener {
-        void bananaCaught(DraggableViewAnimator bananaAnimator);
+        void bananaCaught(View banana);
 
-        void bananaPutBack(DraggableViewAnimator bananaAnimator);
+        void bananaPutBack(View banana);
 
-        void uploaderSeen(CatcherViewAnimator uploaderAnimator, DraggableViewAnimator bananaAnimator);
+        void uploaderSeen(View uploader, View banana);
 
-        void uploaderMissed(CatcherViewAnimator uploaderAnimator, DraggableViewAnimator bananaAnimator);
+        void uploaderMissed(View uploader, View banana);
 
-        boolean beEatOff(CatcherViewAnimator uploaderAnimator, DraggableViewAnimator bananaAnimator);
+        boolean beEatOff(View uploader, View banana);
     }
 }
