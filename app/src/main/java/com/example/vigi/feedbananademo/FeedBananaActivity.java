@@ -94,7 +94,7 @@ public class FeedBananaActivity extends AppCompatActivity implements View.OnClic
                 if (mBananaAnimator != null) {
                     mBananaAnimator.reset();
                 }
-                mUploaderView.animate().scaleX(SCALE_LARGE).scaleY(SCALE_LARGE).start();
+                mUploaderView.animate().scaleX(1.0f).scaleY(1.0f).start();
                 break;
         }
     }
