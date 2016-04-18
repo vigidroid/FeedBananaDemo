@@ -52,8 +52,11 @@ public class DraggableViewAnimator extends ViewAnimator {
         coordinateWithCatcher(getViewPivotX(), getViewPivotY());
     }
 
-    public void onRelease() {
+    public void onRelease(boolean reset) {
         mDragging = false;
+        if (!reset) {
+            return;
+        }
         reset();
         if (mListener != null) {
             mListener.onDistanceChanged(mCatcher, this,
@@ -63,6 +66,10 @@ public class DraggableViewAnimator extends ViewAnimator {
                     )
             );
         }
+    }
+    @Override
+    public void reset() {
+        super.reset();
         if (mCatcher != null) {
             mCatcher.reset();
         }

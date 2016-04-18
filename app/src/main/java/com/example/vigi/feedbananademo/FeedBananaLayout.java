@@ -27,7 +27,6 @@ public class FeedBananaLayout extends FrameLayout
     private ViewDragHelper mViewDragHelper;
     private ViewDragCallBack mDragCallBack;
     private Map<View, Boolean> mBananasState = new HashMap<>();
-    private final Rect mTempRect = new Rect();
 
     private FeedActionListener mFeedActionListener;
 
@@ -130,8 +129,24 @@ public class FeedBananaLayout extends FrameLayout
 
         @Override
         public boolean tryCaptureView(View child, int pointerId) {
+            if (!child.isShown()) {
+                return false;
+            }
             LayoutParams lp = (LayoutParams) child.getLayoutParams();
             return lp.mViewAnimator instanceof DraggableViewAnimator;
+        }
+
+        @Override
+        public int getOrderedChildIndex(int index) {
+            int i = index;
+            while (i >= 0) {
+                LayoutParams lp = (LayoutParams) getChildAt(i).getLayoutParams();
+                if (lp.mDraggable) {
+                    return i;
+                }
+                i--;
+            }
+            return index;
         }
 
         @Override
@@ -157,7 +172,7 @@ public class FeedBananaLayout extends FrameLayout
 
         @Override
         public void onViewReleased(View releasedChild, float xvel, float yvel) {
-            boolean isReleaseView = true;
+            boolean resetView = true;
             DraggableViewAnimator bananaAnimator;
 
             LayoutParams lp = (LayoutParams) releasedChild.getLayoutParams();
@@ -170,13 +185,11 @@ public class FeedBananaLayout extends FrameLayout
             Boolean currState = mBananasState.get(releasedChild);
             if (mFeedActionListener != null && currState != null && currState.equals(true)) {
                 if (mFeedActionListener.beEatOff(bananaAnimator.getCatcher().getView(), releasedChild)) {
-                    isReleaseView = false;
+                    resetView = false;
                 }
             }
 
-            if (isReleaseView) {
-                bananaAnimator.onRelease();
-            }
+            bananaAnimator.onRelease(resetView);
         }
 
         @Override
@@ -219,7 +232,7 @@ public class FeedBananaLayout extends FrameLayout
             ViewGroup.LayoutParams vglp = child.getLayoutParams();
             if (vglp instanceof LayoutParams) {
                 LayoutParams lp = (LayoutParams) vglp;
-                lp.updateOffsetToAnchor(this, child, mTempRect);
+                lp.updateOffsetToAnchor(this, child);
                 lp.bindCatcher(this);
             }
         }
@@ -251,8 +264,9 @@ public class FeedBananaLayout extends FrameLayout
         private boolean mDraggable = false;
         private int mThresholdRadius = 0;
 
-        private View mAnchorView;
+        View mAnchorView;
         ViewAnimator mViewAnimator;
+        final Rect mTempRect = new Rect();
 
         public LayoutParams(Context c, AttributeSet attrs) {
             super(c, attrs);
@@ -290,6 +304,11 @@ public class FeedBananaLayout extends FrameLayout
             super(source);
         }
 
+        void prepare(FeedBananaLayout parent, View child) {
+            initViewAnimator(parent, child);
+            resolveAnchorView(parent);
+        }
+
         private void initViewAnimator(FeedBananaLayout parent, View child) {
             if (mViewAnimator != null) {
                 return;
@@ -306,28 +325,23 @@ public class FeedBananaLayout extends FrameLayout
             }
         }
 
-        void prepare(FeedBananaLayout parent, View child) {
-            initViewAnimator(parent, child);
-            if (mAnchorId != View.NO_ID) {
+        private void resolveAnchorView(FeedBananaLayout parent) {
+            if (mAnchorView != null) {
+                return;
+            }
+            if (mAnchorId != NO_ID) {
                 mAnchorView = parent.findViewById(mAnchorId);
-                if (mAnchorView != null) {
-                    // make mAnchorView's layout_width and layout_height wrote in xml invalid
-                    ViewGroup.LayoutParams lp = mAnchorView.getLayoutParams();
-                    lp.width = this.width;
-                    lp.height = this.height;
-                }
             }
         }
 
-        void updateOffsetToAnchor(FeedBananaLayout parent, View child, Rect tempRect) {
+        void updateOffsetToAnchor(FeedBananaLayout parent, View child) {
             if (mAnchorView == null) {
                 return;
             }
-            mAnchorView.setVisibility(INVISIBLE);
-            tempRect.set(0, 0, mAnchorView.getWidth(), mAnchorView.getHeight());
-            parent.offsetDescendantRectToMyCoords(mAnchorView, tempRect);
-            final int anchorPivotX = tempRect.centerX();
-            final int anchorPivotY = tempRect.centerY();
+            mTempRect.set(0, 0, mAnchorView.getWidth(), mAnchorView.getHeight());
+            parent.offsetDescendantRectToMyCoords(mAnchorView, mTempRect);
+            final int anchorPivotX = mTempRect.centerX();
+            final int anchorPivotY = mTempRect.centerY();
             final int childPivotX = (child.getLeft() + child.getRight()) / 2;
             final int childPivotY = (child.getTop() + child.getBottom()) / 2;
             child.offsetLeftAndRight(anchorPivotX - childPivotX);

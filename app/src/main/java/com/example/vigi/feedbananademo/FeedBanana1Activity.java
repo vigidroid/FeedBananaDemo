@@ -76,8 +76,9 @@ public class FeedBanana1Activity extends AppCompatActivity implements View.OnCli
         switch (v.getId()) {
             case R.id.reset_bt:
                 for (DraggableViewAnimator bananaAnimator : mBananaAnimators) {
-                    bananaAnimator.onRelease();
+                    bananaAnimator.reset();
                 }
+                mUploaderView.animate().scaleX(1.0f).scaleY(1.0f).start();
                 break;
         }
     }

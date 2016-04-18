@@ -22,8 +22,8 @@
 
         <Space
             android:id="@+id/uploader_place_holder"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
             android:layout_marginTop="80dp"/>
 
         <TextView
@@ -40,33 +40,33 @@
 
             <Space
                 android:id="@+id/banana_place_holder1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_width="50dp"
+                android:layout_height="50dp"/>
 
             <Space
                 android:id="@+id/banana_place_holder2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:layout_marginTop="-30dp"/>
 
             <Space
                 android:id="@+id/banana_place_holder3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:layout_marginLeft="5dp"
                 android:layout_marginRight="5dp"
                 android:layout_marginTop="-45dp"/>
 
             <Space
                 android:id="@+id/banana_place_holder4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:layout_marginTop="-30dp"/>
 
             <Space
                 android:id="@+id/banana_place_holder5"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_width="50dp"
+                android:layout_height="50dp"/>
         </LinearLayout>
 
         <ImageView
