@@ -1,5 +1,7 @@
 # FeedBananaDemo
 A simple demo of the feed banana animation in android app "Acfun".
+### record
+![](/record.gif)
 ### screenshots
 | demo screenshot | acfun screenshot |
 | ---- | ----- |
